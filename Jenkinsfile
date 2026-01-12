@@ -6,5 +6,5 @@ pipeline {
                 echo 'Hello Jenkins devops exams test'
             }
         }
-ns    }
+    }
 }
