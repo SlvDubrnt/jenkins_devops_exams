@@ -109,6 +109,18 @@ pipeline {
         } 
       }
     }
+    stage("Stop and remove container") {
+      steps {
+        echo "Stop and remove container"
+        script {
+          sh 'docker container stop cast_service'  
+          sh 'docker container stop movie_service '  
+          sh 'docker container stop cast_db'  
+          sh 'docker container stop movie_db'  
+          sh 'docker container stop nginx'  
+        } 
+      }
+    }
     stage('Push des images sur dockerhub') {
       environment {
         DOCKER_PASS = credentials("DOCKER_HUB_PASS") // we retrieve  docker password from secret text called docker_hub_pass saved on jenkins
@@ -116,29 +128,29 @@ pipeline {
       steps {
         script {
           echo 'Push all images'
+          sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
           sh '''
-          DOCKER_IMAGE = "cast_service" 
-          docker login -u $DOCKER_ID -p $DOCKER_PASS
+          DOCKER_IMAGE = "cast_service:latest" 
           echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
-          
-          DOCKER_IMAGE = "movie_service" 
-          docker login -u $DOCKER_ID -p $DOCKER_PASS
+          '''
+          sh '''          
+          DOCKER_IMAGE = "movie_service:latest" 
           echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
-          
+          '''
+          sh '''          
           DOCKER_IMAGE = "postgres:12.0-alpine" 
-          docker login -u $DOCKER_ID -p $DOCKER_PASS
           echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
-          
+          '''
+          sh '''          
           DOCKER_IMAGE = "postgres:12.1-alpine" 
-          docker login -u $DOCKER_ID -p $DOCKER_PASS
           echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
-          
+          '''
+          sh '''          
           DOCKER_IMAGE = "nginx" 
-          docker login -u $DOCKER_ID -p $DOCKER_PASS
           echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           '''
