@@ -99,7 +99,7 @@ pipeline {
         }
       }
     }
-    stage("Validation de l'application" {
+    stage("Validation de l'application") {
       steps {
         echo "Validation de l'application"
         script {
