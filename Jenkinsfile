@@ -6,6 +6,7 @@ pipeline {
                 script {
                     sh 'docker network create jenkins_cast_movie_network'
                 }
+            }
     }    
     stage('Run Databases') {
             steps {
