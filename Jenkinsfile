@@ -130,6 +130,9 @@ pipeline {
         script {
           echo 'Push all images'
           sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
+
+          sh 'docker push slvdub/cast_service:latest'
+
           sh 'DOCKER_IMAGE = "cast_service"'
           echo '$DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
           sh 'docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
