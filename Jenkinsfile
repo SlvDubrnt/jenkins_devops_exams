@@ -131,12 +131,12 @@ pipeline {
           echo 'Push all images'
           sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
           sh 'DOCKER_IMAGE = "cast_service"'
-          echo ${DOCKER_ID/DOCKER_IMAGE:DOCKER_TAG}
-          sh 'docker push ${DOCKER_ID/DOCKER_IMAGE:DOCKER_TAG}'
+          echo ${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
+          sh 'docker push ${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}'
           sh '''          
           DOCKER_IMAGE = "movie_service" 
-          echo ${DOCKER_ID/DOCKER_IMAGE:DOCKER_TAG}
-          docker push ${DOCKER_ID/DOCKER_IMAGE:DOCKER_TAG}
+          echo ${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
+          docker push ${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
           '''
           sh '''          
           DOCKER_IMAGE = "postgres:12.1-alpine" 
@@ -145,8 +145,8 @@ pipeline {
           '''
           sh '''          
           DOCKER_IMAGE = "nginx" 
-          echo ${DOCKER_ID/DOCKER_IMAGE:DOCKER_TAG}
-          docker push ${DOCKER_ID/DOCKER_IMAGE:DOCKER_TAG}
+          echo ${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
+          docker push ${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
           '''
         }
       }
