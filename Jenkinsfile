@@ -99,9 +99,9 @@ pipeline {
         }
       }
     }
-    stage('Validation de l''application' {
+    stage("Validation de l'application" {
       steps {
-        echo 'Validation de l''application'
+        echo "Validation de l'application"
         script {
           sh 'docker ps'  // To verify all containers are running
           sh 'curl -I http://localhost:9090/api/v1/movies/docsi'
