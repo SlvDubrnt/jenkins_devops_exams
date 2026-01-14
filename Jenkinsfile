@@ -45,7 +45,7 @@ pipeline {
       steps {
         echo 'Creation du cast-service'
         script {
-            sh 'docker build -t $DOCKER_ID/cast_service:$DOCKER_TAG ./cast-service'
+            sh 'docker build -t cast_service:$DOCKER_TAG ./cast-service'
             sh '''
             docker run -d \
               --name cast_service \
@@ -55,7 +55,7 @@ pipeline {
               -e DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast_db/cast_db_dev \
               --network jenkins_cast_movie_network \
               --link cast_db:cast_db \
-              cast_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 $DOCKER_ID/cast_service:$DOCKER_TAG
+              cast_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 cast_service:$DOCKER_TAG
             '''
         }
       }
@@ -64,7 +64,7 @@ pipeline {
       steps {
         echo 'Creation du movie-service'
         script {
-            sh 'docker build -t $DOCKER_ID/movie_service:$DOCKER_TAG ./movie-service'
+            sh 'docker build -t movie_service:$DOCKER_TAG ./movie-service'
             sh '''
             docker run -d \
               --name movie_service \
@@ -76,7 +76,7 @@ pipeline {
               --network jenkins_cast_movie_network \
               --link movie_db:movie_db \
               --link cast_service:cast_service \
-              movie_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 $DOCKER_ID/movie_service:$DOCKER_TAG
+              movie_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 movie_service:$DOCKER_TAG
             '''
         }
       }
