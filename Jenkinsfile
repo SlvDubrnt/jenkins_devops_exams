@@ -103,13 +103,14 @@ pipeline {
       steps {
         echo "Validation de l'application"
         script {
+          sh 'docker image ls' 
           sh 'docker ps'  // To verify all containers are running
           sh 'curl -I http://localhost:9090/api/v1/movies/docs'
           sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
         } 
       }
     }
-    stage("Stop and remove container") {
+    stage("Stop container") {
       steps {
         echo "Stop and remove container"
         script {
@@ -130,12 +131,12 @@ pipeline {
           echo 'Push all images'
           sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
           sh '''
-          DOCKER_IMAGE = "cast_service:latest" 
+          DOCKER_IMAGE = "cast_service" 
           echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           '''
           sh '''          
-          DOCKER_IMAGE = "movie_service:latest" 
+          DOCKER_IMAGE = "movie_service" 
           echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           '''
