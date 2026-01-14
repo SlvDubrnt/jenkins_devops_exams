@@ -139,14 +139,15 @@ pipeline {
         }
       }
     }
-  }
-  post {
-    always {
-      script {
-        sh "docker logout" // Logout from Docker Hub
-        sh "docker ps -a"
-        sh "docker image ls" 
-      }
+  } 
+ }
+ post {
+  always {
+    script {
+      sh "docker logout" // Logout from Docker Hub
+      sh "docker ps -a"
+      sh "docker image ls" 
     }
   }
+ }
 }
