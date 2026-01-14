@@ -48,7 +48,7 @@ pipeline {
             sh 'docker build -t $DOCKER_ID/cast_service:$DOCKER_TAG ./cast-service'
             sh '''
             docker run -d \
-              --name cast_service \
+              --name cast_service $DOCKER_ID/cast_service:$DOCKER_TAG \
               --restart unless-stopped \
               -p 8002:8000 \
               -v ./cast-service/:/app/ \
@@ -67,7 +67,7 @@ pipeline {
             sh 'docker build -t $DOCKER_ID/movie_service:$DOCKER_TAG ./movie-service'
             sh '''
             docker run -d \
-              --name movie_service \
+              --name movie_service $DOCKER_ID/movie_service:$DOCKER_TAG \
               --restart unless-stopped \
               -p 8001:8000 \
               -v ./movie-service/:/app/ \
@@ -131,23 +131,13 @@ pipeline {
           echo 'Push all images'
           sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
 
-          sh 'docker push slvdub/cast_service:latest'
 
           sh 'DOCKER_IMAGE = "cast_service"'
           echo '$DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
           sh 'docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
+        
           sh '''          
           DOCKER_IMAGE = "movie_service" 
-          echo '$DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
-          docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
-          '''
-          sh '''          
-          DOCKER_IMAGE = "postgres:12.1-alpine" 
-          echo '$DOCKER_ID/$DOCKER_IMAGE'
-          docker push $DOCKER_ID/$DOCKER_IMAGE
-          '''
-          sh '''          
-          DOCKER_IMAGE = "nginx" 
           echo '$DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           '''
