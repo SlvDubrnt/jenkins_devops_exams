@@ -55,7 +55,8 @@ pipeline {
               -e DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast_db/cast_db_dev \
               --network jenkins_cast_movie_network \
               --link cast_db:cast_db \
-              cast_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 cast_service:$DOCKER_TAG
+              cast_service:$DOCKER_TAG \
+              cast_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 
             '''
         }
       }
@@ -76,7 +77,8 @@ pipeline {
               --network jenkins_cast_movie_network \
               --link movie_db:movie_db \
               --link cast_service:cast_service \
-              movie_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 movie_service:$DOCKER_TAG
+              movie_service:$DOCKER_TAG \
+              movie_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
             '''
         }
       }
@@ -103,8 +105,6 @@ pipeline {
       steps {
         echo "Validation de l'application"
         script {
-          sh 'docker image ls' 
-          sh 'docker ps'  // To verify all containers are running
           sh 'curl -I http://localhost:9090/api/v1/movies/docs'
           sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
         } 
@@ -149,6 +149,8 @@ pipeline {
     always {
       script {
         sh "docker logout" // Logout from Docker Hub
+        sh "docker ps"
+        sh "docker mage ls" 
       }
     }
   }
