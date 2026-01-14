@@ -104,7 +104,7 @@ pipeline {
         echo "Validation de l'application"
         script {
           sh 'docker ps'  // To verify all containers are running
-          sh 'curl -I http://localhost:9090/api/v1/movies/docsi'
+          sh 'curl -I http://localhost:9090/api/v1/movies/docs'
           sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
         } 
       }
@@ -119,18 +119,27 @@ pipeline {
           sh '''
           DOCKER_IMAGE = "cast_service" 
           docker login -u $DOCKER_ID -p $DOCKER_PASS
+          echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          
           DOCKER_IMAGE = "movie_service" 
           docker login -u $DOCKER_ID -p $DOCKER_PASS
+          echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          
           DOCKER_IMAGE = "postgres:12.0-alpine" 
           docker login -u $DOCKER_ID -p $DOCKER_PASS
+          echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          
           DOCKER_IMAGE = "postgres:12.1-alpine" 
           docker login -u $DOCKER_ID -p $DOCKER_PASS
+          echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          
           DOCKER_IMAGE = "nginx" 
           docker login -u $DOCKER_ID -p $DOCKER_PASS
+          echo $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
           '''
         }
