@@ -1,4 +1,8 @@
 pipeline {
+  environment { // Declaration of environment variables
+    DOCKER_ID = "slvdub" // replace this with your docker-id
+    DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
+  }
   agent any
   stages {
     stage('Creation du reseau') {
@@ -79,6 +83,7 @@ pipeline {
     }
     stage('Run Nginx') {
       steps {
+        echo 'Creation de nginx'
         script {
             sh '''
             docker run -d \
@@ -94,13 +99,41 @@ pipeline {
         }
       }
     }
-  }
-  post {
-    always {
-      script {
-        sh 'docker ps'  // To verify all containers are running
-        sh 'curl -I http://localhost/api/v1/movies/docsi'
-        sh 'curl -I http://localhost/api/v1/casts/docs' 
+    stage('Validation de l''application' {
+      steps {
+        echo 'Validation de l''application'
+        script {
+          sh 'docker ps'  // To verify all containers are running
+          sh 'curl -I http://localhost:9090/api/v1/movies/docsi'
+          sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
+        } 
+      }
+    }
+    stage('Push des images sur dockerhub') {
+      environment {
+        DOCKER_PASS = credentials("DOCKER_HUB_PASS") // we retrieve  docker password from secret text called docker_hub_pass saved on jenkins
+      }
+      steps {
+        script {
+          echo 'Push all images'
+          sh '''
+          DOCKER_IMAGE = "cast_service" 
+          docker login -u $DOCKER_ID -p $DOCKER_PASS
+          docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          DOCKER_IMAGE = "movie_service" 
+          docker login -u $DOCKER_ID -p $DOCKER_PASS
+          docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          DOCKER_IMAGE = "postgres:12.0-alpine" 
+          docker login -u $DOCKER_ID -p $DOCKER_PASS
+          docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          DOCKER_IMAGE = "postgres:12.1-alpine" 
+          docker login -u $DOCKER_ID -p $DOCKER_PASS
+          docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          DOCKER_IMAGE = "nginx" 
+          docker login -u $DOCKER_ID -p $DOCKER_PASS
+          docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+          '''
+        }
       }
     }
   }
