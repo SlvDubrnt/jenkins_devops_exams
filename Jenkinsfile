@@ -45,7 +45,7 @@ pipeline {
       steps {
         echo 'Creation du cast-service'
         script {
-            sh 'docker build -t cast_service ./cast-service'
+            sh 'docker build -t $DOCKER_ID/cast_service:$DOCKER_TAG ./cast-service'
             sh '''
             docker run -d \
               --name cast_service \
@@ -64,7 +64,7 @@ pipeline {
       steps {
         echo 'Creation du movie-service'
         script {
-            sh 'docker build -t movie_service ./movie-service'
+            sh 'docker build -t $DOCKER_ID/movie_service:$DOCKER_TAG ./movie-service'
             sh '''
             docker run -d \
               --name movie_service \
