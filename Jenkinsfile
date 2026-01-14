@@ -56,7 +56,7 @@ pipeline {
               --network jenkins_cast_movie_network \
               --link cast_db:cast_db \
               cast_service:$DOCKER_TAG \
-              cast_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 
+              uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 
             '''
         }
       }
@@ -78,7 +78,7 @@ pipeline {
               --link movie_db:movie_db \
               --link cast_service:cast_service \
               movie_service:$DOCKER_TAG \
-              movie_service uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+              uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
             '''
         }
       }
