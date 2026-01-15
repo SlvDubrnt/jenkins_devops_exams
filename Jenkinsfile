@@ -106,6 +106,7 @@ pipeline {
         echo "Validation de l'application"
         script {
           sh "docker ps"
+          sh "docker image ls" 
           sh 'curl -I http://localhost:9090/api/v1/movies/docs'
           sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
         } 
@@ -136,18 +137,45 @@ pipeline {
           images.each { image ->
             echo "${DOCKER_ID}/${image}:${DOCKER_TAG}"
             sh "docker push ${DOCKER_ID}/${image}:${DOCKER_TAG}"
+          }
         }
+      } 
+    } 
+    stage("Remove containers and images") {
+      steps {
+        echo "Remove containers and images"
+        script {
+          sh 'docker container rm cast_service'  
+          sh 'docker container rm movie_service '  
+          sh 'docker container rm cast_db'  
+          sh 'docker container rm movie_db'  
+          sh 'docker container rm nginx' 
+          
+          def images = ["cast_service", "movie_service"]
+          images.each { image ->
+            echo "${DOCKER_ID}/${image}:${DOCKER_TAG}"
+            sh "docker image rm -f ${DOCKER_ID}/${image}:${DOCKER_TAG}"
+          }
+          sh 'docker image rm postgres:12.1-alpine -f'
+          sh 'docker image rm nginx -f'
+          sh 'docker network rm jenkins_cast_movie_network'
+ 
+          sh 'docker volume rm postgres_data_cast'
+          sh 'docker volume rm postgres_data_movie'
+ 
+          sh 'docker image ls'
+          sh 'docker network ls'
+          sh 'docker container ls'
+          sh 'docker volume ls'
+        } 
       }
     }
-  } 
- }
- post {
-  always {
-    script {
-      sh "docker logout" // Logout from Docker Hub
-      sh "docker ps -a"
-      sh "docker image ls" 
-    }
   }
- }
+  post {
+    always {
+      script {
+        sh "docker logout" // Logout from Docker Hub
+      } 
+    }
+  } 
 }
