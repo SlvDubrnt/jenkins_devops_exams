@@ -30,7 +30,7 @@ pipeline {
         expression { BRANCH_NAME == 'dev' && currentBuild.result == 'SUCCESS' }
       }
       steps {
-        echo "Deploying ${BRANCH_NAME}""
+        echo "Deploying ${BRANCH_NAME}"
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
