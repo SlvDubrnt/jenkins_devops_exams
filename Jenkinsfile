@@ -7,9 +7,13 @@ pipeline {
   agent any
   stages {
     stage('Build') {
+      when {
+        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
+      }
+
       steps {
         script {
-          echo 'Build'
+          echo 'Build branch ${BRANCH_NAME}'
           // Appel à la fonction build avec plusieurs sous-stages
           // build()
         }
@@ -62,9 +66,9 @@ pipeline {
       steps {
         script {
           input message: "Approve deployment to PROD", ok: "Deploy"
+          echo "Deploying to PROD from ${BRANCH_NAME}"
+          // Ajoutez ici les étapes de déploiement spécifiques à votre projet
         }
-        echo "Deploying to PROD from ${BRANCH_NAME}"
-        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
   }
