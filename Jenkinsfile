@@ -30,7 +30,7 @@ pipeline {
         expression { BRANCH_NAME == 'dev' && currentBuild.result == 'SUCCESS' }
       }
       steps {
-        echo "Deploying to QA from DEV"
+        echo "Deploying ${BRANCH_NAME}""
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
@@ -40,7 +40,7 @@ pipeline {
         expression { BRANCH_NAME == 'qa' && currentBuild.result == 'SUCCESS' }
       }
       steps {
-        echo "Deploying to STAGING from QA"
+        echo "Deploying to STAGING ${BRANCH_NAME}"
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
@@ -50,7 +50,7 @@ pipeline {
         expression { BRANCH_NAME == 'staging' && currentBuild.result == 'SUCCESS' }
       }
       steps {
-        echo "Deploying to PROD from STAGING"
+        echo "Deploying to PROD from ${BRANCH_NAME}"
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
@@ -63,7 +63,7 @@ pipeline {
         script {
           input message: "Approve deployment to PROD", ok: "Deploy"
         }
-        echo "Deploying to PROD from MASTER"
+        echo "Deploying to PROD from ${BRANCH_NAME}"
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
