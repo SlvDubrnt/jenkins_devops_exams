@@ -8,7 +8,7 @@ pipeline {
   stages {
     stage('Deploy') {
       when {
-        eexpression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
+        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
       }
       steps {
         echo "Deploying ${BRANCH_NAME}"
