@@ -2,71 +2,69 @@ pipeline {
   environment { // Declaration of environment variables
     DOCKER_ID = "slvdub" // replace this with your docker-id
     DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
+    BRANCH_NAME = sh(script: 'git rev-parse --abrev-ref HEAD', returnStdout: true).trim()
   }
   agent any
   stages {
     stage('Build') {
       steps {
         script {
-          echo 'Bbuild'
+          echo 'Build'
           // Appel à la fonction build avec plusieurs sous-stages
           // build()
         }
       }
     }
-    stage('Deploy Dev') {
+    stage('Test') {
       when {
-          branch 'dev'
+        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
       }
       steps {
-          echo 'Deploying in DEV environment...'
-          // Ajoutez vos commandes de test pour l'environnement DEV ici
+        echo "Testing branch ${BRANCH_NAME}"
+        sh 'curl -I http://localhost:9090/api/v1/movies/docs'
+        sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
       }
     }
-    stage('Deploy QA') {
+    stage('Deploy') {
       when {
-          branch 'qa' && successful()
+        expression { BRANCH_NAME == 'dev' && currentBuild.result == 'SUCCESS' }
       }
       steps {
-          echo 'Deploying to QA environment...'
-          // Ajoutez vos commandes de déploiement pour l'environnement QA ici
+        echo "Deploying to QA from DEV"
+        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
-    stage('Test QA') {
+
+    stage('QA Approval') {
       when {
-          branch 'qa' && successful()
+        expression { BRANCH_NAME == 'qa' && currentBuild.result == 'SUCCESS' }
       }
       steps {
-          echo 'Testing in QA environment...'
-          // Ajoutez vos commandes de test pour l'environnement QA ici
+        echo "Deploying to STAGING from QA"
+        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
-    stage('Deploy Staging') {
+
+    stage('Staging Approval') {
       when {
-          branch 'staging' && successful()
+        expression { BRANCH_NAME == 'staging' && currentBuild.result == 'SUCCESS' }
       }
       steps {
-          echo 'Deploying to STAGING environment...'
-          // Ajoutez vos commandes de déploiement pour l'environnement STAGING ici
+        echo "Deploying to PROD from STAGING"
+        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
-    stage('Test Staging') {
+
+    stage('Manual Approval for Master') {
       when {
-          branch 'staging' && successful()
+        expression { BRANCH_NAME == 'master' }
       }
       steps {
-          echo 'Testing in STAGING environment...'
-          // Ajoutez vos commandes de test pour l'environnement STAGING ici
-      }
-    }
-    stage('Deploy Production') {
-      when {
-          branch 'master'
-      }
-      steps {
-          input message: 'Approve deployment to PRODUCTION?', ok: 'Deploy'
-          echo 'Deploying to PRODUCTION environment...'
-          // Ajoutez vos commandes de déploiement pour l'environnement PRODUCTION ici
+        script {
+          input message: "Approve deployment to PROD", ok: "Deploy"
+        }
+        echo "Deploying to PROD from MASTER"
+        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
       }
     }
   }
