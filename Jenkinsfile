@@ -6,32 +6,24 @@ pipeline {
   }
   agent any
   stages {
-    stage('Build') {
-      when {
-        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
-      }
-
-      steps {
-        script {
-          echo 'Build branch ${BRANCH_NAME}'
-          // Appel à la fonction build avec plusieurs sous-stages
-          // build()
-        }
-      }
-    }
     stage('Deploy') {
       when {
-        expression { BRANCH_NAME == 'dev' && currentBuild.result == 'SUCCESS' }
+        eexpression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
       }
       steps {
         echo "Deploying ${BRANCH_NAME}"
+        //Build()
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
+        if  ( BRANCH_NAME == 'dev' ) {
+          return True
+        }   
+         
       }
     }
 
     stage('QA Approval') {
       when {
-        expression { BRANCH_NAME == 'qa' && currentBuild.result == 'SUCCESS' }
+        expression { BRANCH_NAME == 'qa' && branchSuccess('dev') } 
       }
       steps {
         echo "Deploying to STAGING ${BRANCH_NAME}"
@@ -41,7 +33,7 @@ pipeline {
 
     stage('Staging Approval') {
       when {
-        expression { BRANCH_NAME == 'staging' && currentBuild.result == 'SUCCESS' }
+        expression { BRANCH_NAME == 'staging' && branchSuccess('qa') }
       }
       steps {
         echo "Deploying to PROD from ${BRANCH_NAME}"
@@ -51,7 +43,7 @@ pipeline {
 
     stage('Manual Approval for Master') {
       when {
-        expression { BRANCH_NAME == 'master' && currentBuild.result == 'SUCCESS' }
+        expression { BRANCH_NAME == 'master'   && branchSuccess('staging')}
       }
       steps {
         script {
@@ -70,6 +62,37 @@ pipeline {
     }
   } 
 }
+
+// Fonction pour vérifier si une branche spécifique a réussi
+def branchSuccess(String branch) {
+    // Implémentez votre logique de vérification ici
+  if ( currentBuild.result == 'SUCCESS' ) {
+    return True  // Placeholder
+  } else {
+    return False
+  }
+}
+
+def deploy(String branch) {
+  environment {
+    KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+  }
+  steps {
+    script {
+    sh '''
+    rm -Rf .kube
+    mkdir .kube
+    ls
+    cat $KUBECONFIG > .kube/config
+    cp fastapi/values.yaml values.yml
+    cat values.yml
+    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+    helm upgrade --install app fastapi --values=values.yml --namespace dev
+    '''
+    }
+  }
+}
+
 
 def build() {
   stage('Creation du reseau') {
