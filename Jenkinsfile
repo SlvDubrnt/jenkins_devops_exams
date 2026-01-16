@@ -19,16 +19,6 @@ pipeline {
         }
       }
     }
-    stage('Test') {
-      when {
-        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
-      }
-      steps {
-        echo "Testing branch ${BRANCH_NAME}"
-        sh 'curl -I http://localhost:9090/api/v1/movies/docs'
-        sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
-      }
-    }
     stage('Deploy') {
       when {
         expression { BRANCH_NAME == 'dev' && currentBuild.result == 'SUCCESS' }
@@ -61,7 +51,7 @@ pipeline {
 
     stage('Manual Approval for Master') {
       when {
-        expression { BRANCH_NAME == 'master' }
+        expression { BRANCH_NAME == 'master' && currentBuild.result == 'SUCCESS' }
       }
       steps {
         script {
