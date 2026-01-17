@@ -2,22 +2,32 @@ pipeline {
   environment { // Declaration of environment variables
     DOCKER_ID = "slvdub" // replace this with your docker-id
     DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
-    BRANCH_NAME = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+    //BRANCH_NAME = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+    BRANCH_NAME = "${GIT_BRANCH}".replace("refs/heads/", "")
   }
   agent any
   stages {
+      stage('Debug') {
+      steps {
+        script {
+          echo "BRANCH_NAME: ${BRANCH_NAME}"
+          // Ajoutez d'autres débogages si nécessaire
+        }
+      }
+    }
     stage('Deploy') {
       when {
         expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
       }
       steps {
-        echo "Deploying ${BRANCH_NAME}"
+        
         
         //Build()
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
         script {
+          echo "Deploying ${BRANCH_NAME}"
           if ( BRANCH_NAME == 'dev' ) {
-            return true
+            currentBuild.result = 'SUCCESS'
           }   
         }         
       }
@@ -25,32 +35,37 @@ pipeline {
 
     stage('QA Approval') {
       when {
-        expression { BRANCH_NAME == 'qa' && branchSuccess('dev') } 
+        expression { BRANCH_NAME == 'qa' && checkBranchSuccess('dev') } 
       }
       steps {
-        echo "Deploying to STAGING ${BRANCH_NAME}"
+        script {
+          echo "Deploying to STAGING ${BRANCH_NAME}"
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
+        }
       }
     }
 
     stage('Staging Approval') {
       when {
-        expression { BRANCH_NAME == 'staging' && branchSuccess('qa') }
+        expression { BRANCH_NAME == 'staging' && checkBranchSuccess('qa') }
       }
       steps {
-        echo "Deploying to PROD from ${BRANCH_NAME}"
+       script {
+          echo "Deploying to STAGING ${BRANCH_NAME}"
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
+        }
       }
     }
 
     stage('Manual Approval for Master') {
       when {
-        expression { BRANCH_NAME == 'master'   && branchSuccess('staging')}
+        expression { BRANCH_NAME == 'master'   && checkBranchSuccess('staging')}
       }
       steps {
         script {
-          input message: "Approve deployment to PROD", ok: "Deploy"
           echo "Deploying to PROD from ${BRANCH_NAME}"
+          input message: "Approve deployment to PROD", ok: "Deploy"
+          
           // Ajoutez ici les étapes de déploiement spécifiques à votre projet
         }
       }
@@ -66,6 +81,14 @@ pipeline {
 }
 
 // Fonction pour vérifier si une branche spécifique a réussi
+def checkBranchSuccess(String branch) {
+  def lastBuild = currentBuild.raw.builds.find { it.getEnvironment("BRANCH_NAME") == previousBranch }
+    if (lastBuild && lastBuild.result == 'SUCCESS') {
+      return true
+    } else {
+      return false
+    }
+}
 def branchSuccess(String branch) {
     // Implémentez votre logique de vérification ici
   currentBuild.rawBuild.getPreviousBuilds().find { previousBuild ->
