@@ -12,12 +12,14 @@ pipeline {
       }
       steps {
         echo "Deploying ${BRANCH_NAME}"
+        
         //Build()
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
-        if ( BRANCH_NAME == 'dev' ) {
-          return true
-        }   
-         
+        script {
+          if ( BRANCH_NAME == 'dev' ) {
+            return true
+          }   
+        }         
       }
     }
 
