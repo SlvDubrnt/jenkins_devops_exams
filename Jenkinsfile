@@ -2,7 +2,7 @@ pipeline {
   environment { // Declaration of environment variables
     DOCKER_ID = "slvdub" // replace this with your docker-id
     DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
-    BRANCH_NAME = sh(script: 'git rev-parse --abrev-ref HEAD', returnStdout: true).trim()
+    BRANCH_NAME = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
   }
   agent any
   stages {
@@ -14,8 +14,8 @@ pipeline {
         echo "Deploying ${BRANCH_NAME}"
         //Build()
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
-        if  ( BRANCH_NAME == 'dev' ) {
-          return True
+        if ( BRANCH_NAME == 'dev' ) {
+          return true
         }   
          
       }
@@ -66,11 +66,9 @@ pipeline {
 // Fonction pour vérifier si une branche spécifique a réussi
 def branchSuccess(String branch) {
     // Implémentez votre logique de vérification ici
-  if ( currentBuild.result == 'SUCCESS' ) {
-    return True  // Placeholder
-  } else {
-    return False
-  }
+  currentBuild.rawBuild.getPreviousBuilds().find { previousBuild ->
+    previousBuild.displayName == branch && previousBuild.result == 'SUCCESS'
+  } != null
 }
 
 def deploy(String branch) {
