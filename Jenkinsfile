@@ -22,7 +22,7 @@ pipeline {
       steps {
         
         
-        Build()
+        build()
         // Ajoutez ici les étapes de déploiement spécifiques à votre projet
         script {
           echo "Deploying ${BRANCH_NAME}"
