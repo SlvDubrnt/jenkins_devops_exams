@@ -1,0 +1,85 @@
+service:
+  type: ClusterIP
+  port: 80
+
+
+cast_db:
+  replicas: 1
+  image: postgres:12.1-alpine
+  port: 5432
+  username: cast_db_username
+  password: cast_db_password
+  database: cast_db_dev
+  persistence:
+    size: 1Gi
+
+
+movie_db:
+  replicas: 1
+  image: postgres:12.1-alpine
+  port: 5432
+  username: movie_db_username
+  password: movie_db_password
+  database: movie_db_dev
+  persistence:
+    size: 1Gi
+
+
+cast_service:
+  replicas: 1
+  image: slvdub/cast_service
+  tag: latest
+  port: 8000
+  initContainers:
+    enabled: true
+    dbHost: cast-db
+    dbPort: 5432
+  env:
+    DATABASE_URI: postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev
+
+movie_service:
+  replicas: 1
+  image: slvdub/movie_service
+  tag: latest
+  port: 8000
+  initContainers:
+    enabled: true
+    dbHost: movie-db
+    dbPort: 5432
+    services:
+    - name: cast-service
+      host: cast-service
+      port: 8001
+      timeout: 60
+  env:
+    DATABASE_URI: postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev
+    CAST_SERVICE_HOST_URL: http://cast_service:8000/api/v1/casts/
+
+
+nginx:
+  replicas: 1
+  image:
+    repository: nginx
+    tag: latest
+  configVolumePath: ./nginx_config.conf
+  port: 9090
+  configMapName: nginx-configmap
+  initContainers:
+    enabled: true
+    services:
+    - name: movie-service
+      host: movie-service
+      port: 8002
+      timeout: 60
+    - name: cast-service
+      host: cast-service
+      port: 8001
+      timeout: 60
+
+httpRoute:
+# HTTPRoute enabled.
+  enabled: false
+
+ingress:
+# ingress enabled.
+  enabled: false

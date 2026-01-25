@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: {{ .Values.nginx.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      {{- if .Values.nginx.initContainers.enabled }}
+      initContainers:
+      {{- range .Values.nginx.initContainers.services }}
+      - name: wait-for-1-{{ .name }}
+        image: busybox
+        command:
+          - sh
+          - -c
+          - 'until nc -z {{ .host }} {{ .port }};
+            do echo "Waiting for {{ .host }}"; sleep 1;
+            done; exit 0'
+      # ou avec un timeout (exemple : 2 minutes)
+      - name: wait-for-2-{{ .name }}
+        image: busybox
+        command:
+          - sh
+          - -c
+          - 'timeout 120 sh -c "until nc -z {{ .host }} {{ .port }};
+            do echo \"Waiting for {{ .host }}\"; sleep 1;
+            done" || true'
+      {{- end }}
+      {{- end }}
+      containers:
+      - name: nginx
+        image: {{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/conf.d/
+      volumes:
+      - name: nginx-config-volume
+        configMap:
+          name: {{ .Values.nginx.configMapName }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  type: LoadBalancer   # Or NodePort if LoadBalancer is not available
+  ports:
+  - port: 9090
+    targetPort: 9090
+  selector:
+    app: nginx
+

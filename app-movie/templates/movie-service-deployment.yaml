@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-service
+spec:
+  replicas: {{ .Values.movie_service.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: movie-service
+  template:
+    metadata:
+      labels:
+        app: movie-service
+    spec:
+      initContainers:
+      - name: wait-for-movie-db
+        image: busybox
+        command:
+        - sh
+        - -c
+        - 'until nc -z {{ .Values.movie_service.initContainers.dbHost }} {{ .Values.movie_service.initContainers.dbPort }}; do echo "Waiting for {{ .Values.movie_service.initContainers.dbHost }}"; sleep 1; done'
+      {{- range .Values.movie_service.initContainers.services }}
+      - name: wait-for-cast-service
+        image: busybox
+        command:
+          - sh
+          - -c
+          - 'until nc -z {{ .host }} {{ .port }};
+            do echo "Waiting for {{ .host }}"; sleep 1;
+            done; exit 0'
+      {{- end }}
+      containers:
+      - name: "movie-service"
+        image: {{ .Values.movie_service.image }}:{{ .Values.movie_service.tag }}
+        imagePullPolicy: Always
+        command: ["sh", "-c", "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"]
+        ports:
+        - containerPort: {{ .Values.movie_service.port }}
+        env:
+        - name: DATABASE_URI
+          value: {{ .Values.movie_service.env.DATABASE_URI | default "postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev" }}
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie-service
+spec:
+  selector:
+    app: movie-service 
+  ports:
+    - protocol: TCP
+      port: 8002
+      targetPort: {{ .Values.movie_service.port }}
+

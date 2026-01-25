@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cast-db
+spec:
+  serviceName: "cast-db"
+  replicas: {{ .Values.cast_db.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: cast-db
+  template:
+    metadata:
+      labels:
+        app: cast-db
+    spec:
+      containers:
+      - name: cast-db
+        image: {{ .Values.cast_db.image }}
+        env:
+        - name: POSTGRES_USER
+          value: {{ .Values.cast_db.username }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.cast_db.password }}
+        - name: POSTGRES_DB
+          value: {{ .Values.cast_db.database }}
+        ports:
+        - containerPort: {{ .Values.cast_db.port }}
+        volumeMounts:
+        - name: cast-db-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: cast-db-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.cast_db.persistence.size | default "1Gi" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cast-db
+spec:
+  selector:
+    app: cast-db
+  ports:
+    - protocol: TCP
+      port: {{ .Values.cast_db.port }}
+      targetPort: {{ .Values.cast_db.port }}
