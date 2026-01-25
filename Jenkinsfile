@@ -20,11 +20,8 @@ pipeline {
         expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
       }
       steps {
-        
-        
-        build()
-        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
         script {
+          build()
           echo "Deploying ${BRANCH_NAME}"
           if ( BRANCH_NAME == 'dev' ) {
             currentBuild.result = 'SUCCESS'
