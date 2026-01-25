@@ -1,7 +1,8 @@
 pipeline {
   environment { // Declaration of environment variables
     DOCKER_ID = "slvdub" // replace this with your docker-id
-    DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
+    //DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
+    DOCKER_TAG = "latest" // we will tag our images with the current build in order to increment the value by 1 with each new build
     //BRANCH_NAME = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
     BRANCH_NAME = "${GIT_BRANCH}".replace("refs/heads/", "")
   }
