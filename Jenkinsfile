@@ -21,7 +21,7 @@ pipeline {
       }
       steps {
         script {
-          build(DOCKER_ID, DOCKER_TAG)
+          build()
           echo "Building Docker"
           echo "Deploying ${BRANCH_NAME}"
           if ( BRANCH_NAME == 'dev' ) {
@@ -103,14 +103,14 @@ def deploy(String branch) {
     cat $KUBECONFIG > .kube/config
     cp app-movie/values.yaml values.yml
     cat values.yml
-    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+    sed -i "s+tag.*+tag: ${env.DOCKER_TAG}+g" values.yml
     cat values.yml
     helm upgrade --install app-movie app-movie --values=values.yml --namespace dev
     '''
 }
 
 
-def build(String docker_id, String image_tag) {
+def build() {
   echo '*** Creation du reseau'
   sh 'docker network create jenkins_cast_movie_network'
   
@@ -139,7 +139,7 @@ def build(String docker_id, String image_tag) {
   
   
   echo '*** Creation du cast-service'
-    sh 'docker build -t $docker_id/cast_service:$image_tag ./cast-service'
+    sh 'docker build -t ${env.DOCKER_ID}/cast_service:${env.DOCKER_TAG} ./cast-service'
     sh '''
     docker run -d \
       --name cast_service \
@@ -149,12 +149,12 @@ def build(String docker_id, String image_tag) {
       -e DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast_db/cast_db_dev \
       --network jenkins_cast_movie_network \
       --link cast_db:cast_db \
-      $docker_id/cast_service:$image_tag \
+      ${env.DOCKER_ID}/cast_service:${env.DOCKER_TAG} \
       uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 
     '''
   
   echo '***Creation du movie-service'
-    sh 'docker build -t $docker_id/movie_service:$image_tag ./movie-service'
+    sh 'docker build -t ${env.DOCKER_ID}/movie_service:${env.DOCKER_TAG} ./movie-service'
     sh '''
     docker run -d \
       --name movie_service \
@@ -166,7 +166,7 @@ def build(String docker_id, String image_tag) {
       --network jenkins_cast_movie_network \
       --link movie_db:movie_db \
       --link cast_service:cast_service \
-      $docker_id/movie_service:$image_tag \
+      ${env.DOCKER_ID}/movie_service:${env.DOCKER_TAG} \
       uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     '''
   
@@ -198,13 +198,13 @@ def build(String docker_id, String image_tag) {
   DOCKER_PASS = credentials("DOCKER_HUB_PASS") // we retrieve  docker password from secret text called docker_hub_pass saved on jenkins
   
   echo 'Push all images'
-  sh 'docker login -u $docker_id -p $DOCKER_PASS'
+  sh 'docker login -u $env.DOCKER_ID -p $DOCKER_PASS'
 
   def images = ["cast_service", "movie_service"]
   
   images.each { image ->
-    echo "${docker_id}/${image}:${image_tag}"
-    sh "docker push ${docker_id}/${image}:${image_tag}"
+    echo "${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
+    sh "docker push ${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
   }
   
   echo "*** Remove containers and images"
@@ -215,8 +215,8 @@ def build(String docker_id, String image_tag) {
   sh 'docker container rm nginx' 
   
   images.each { image ->
-    echo "${docker_id}/${image}:${image_tag}"
-    sh "docker push ${docker_id}/${image}:${image_tag}"
+    echo "${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
+    sh "docker push ${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
   }
   sh 'docker image rm postgres:12.1-alpine -f'
   sh 'docker image rm nginx -f'
