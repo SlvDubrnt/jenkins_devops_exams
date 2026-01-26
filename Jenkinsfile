@@ -22,7 +22,7 @@ pipeline {
       steps {
         script {
           build(DOCKER_ID, DOCKER_TAG)
-          echo "Building Docker
+          echo "Building Docker"
           echo "Deploying ${BRANCH_NAME}"
           if ( BRANCH_NAME == 'dev' ) {
             currentBuild.result = 'SUCCESS'
