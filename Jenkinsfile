@@ -110,7 +110,7 @@ def deploy(String branch) {
 }
 
 
-def build(string docker_id, string image_tag) {
+def build(String docker_id, String image_tag) {
   echo '*** Creation du reseau'
   sh 'docker network create jenkins_cast_movie_network'
   
@@ -201,6 +201,7 @@ def build(string docker_id, string image_tag) {
   sh 'docker login -u $docker_id -p $DOCKER_PASS'
 
   def images = ["cast_service", "movie_service"]
+  
   images.each { image ->
     echo "${docker_id}/${image}:${image_tag}"
     sh "docker push ${docker_id}/${image}:${image_tag}"
@@ -213,7 +214,6 @@ def build(string docker_id, string image_tag) {
   sh 'docker container rm movie_db'  
   sh 'docker container rm nginx' 
   
-  def images = ["cast_service", "movie_service"]
   images.each { image ->
     echo "${docker_id}/${image}:${image_tag}"
     sh "docker push ${docker_id}/${image}:${image_tag}"
