@@ -97,6 +97,7 @@ def branchSuccess(String branch) {
 }
 
 def deploy(String branch) {
+    
     sh '''
     rm -Rf .kube
     mkdir .kube
@@ -106,7 +107,7 @@ def deploy(String branch) {
     cat values.yaml
     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
     cat values.yaml
-    helm upgrade --install app-movie app-movie --values=values.yaml -- branch
+    helm upgrade --install app-movie app-movie --values=values.yaml -n branch
     '''
 }
 
