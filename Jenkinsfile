@@ -103,7 +103,7 @@ def deploy(String branch) {
     cat $KUBECONFIG > .kube/config
     cp app-movie/values.yaml values.yml
     cat values.yml
-    sed -i "s+tag.*+tag: ${env.DOCKER_TAG}+g" values.yml
+    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
     cat values.yml
     helm upgrade --install app-movie app-movie --values=values.yml --namespace dev
     '''
@@ -139,7 +139,7 @@ def build() {
   
   
   echo '*** Creation du cast-service'
-    sh 'docker build -t ${env.DOCKER_ID}/cast_service:${env.DOCKER_TAG} ./cast-service'
+    sh 'docker build -t ${DOCKER_ID}/cast_service:${DOCKER_TAG} ./cast-service'
     sh '''
     docker run -d \
       --name cast_service \
@@ -149,12 +149,12 @@ def build() {
       -e DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast_db/cast_db_dev \
       --network jenkins_cast_movie_network \
       --link cast_db:cast_db \
-      ${env.DOCKER_ID}/cast_service:${env.DOCKER_TAG} \
+      ${DOCKER_ID}/cast_service:${DOCKER_TAG} \
       uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 
     '''
   
   echo '***Creation du movie-service'
-    sh 'docker build -t ${env.DOCKER_ID}/movie_service:${env.DOCKER_TAG} ./movie-service'
+    sh 'docker build -t ${DOCKER_ID}/movie_service:${DOCKER_TAG} ./movie-service'
     sh '''
     docker run -d \
       --name movie_service \
@@ -166,7 +166,7 @@ def build() {
       --network jenkins_cast_movie_network \
       --link movie_db:movie_db \
       --link cast_service:cast_service \
-      ${env.DOCKER_ID}/movie_service:${env.DOCKER_TAG} \
+      ${DOCKER_ID}/movie_service:${DOCKER_TAG} \
       uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     '''
   
@@ -198,13 +198,13 @@ def build() {
   DOCKER_PASS = credentials("DOCKER_HUB_PASS") // we retrieve  docker password from secret text called docker_hub_pass saved on jenkins
   
   echo 'Push all images'
-  sh 'docker login -u $env.DOCKER_ID -p $DOCKER_PASS'
+  sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
 
   def images = ["cast_service", "movie_service"]
   
   images.each { image ->
-    echo "${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
-    sh "docker push ${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
+    echo "${DOCKER_ID}/${image}:${DOCKER_TAG}"
+    sh "docker push ${DOCKER_ID}/${image}:${DOCKER_TAG}"
   }
   
   echo "*** Remove containers and images"
@@ -215,8 +215,8 @@ def build() {
   sh 'docker container rm nginx' 
   
   images.each { image ->
-    echo "${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
-    sh "docker push ${env.DOCKER_ID}/${image}:${env.DOCKER_TAG}"
+    echo "${DOCKER_ID}/${image}:${DOCKER_TAG}"
+    sh "docker push ${DOCKER_ID}/${image}:${DOCKER_TAG}"
   }
   sh 'docker image rm postgres:12.1-alpine -f'
   sh 'docker image rm nginx -f'
