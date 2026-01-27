@@ -19,12 +19,12 @@ pipeline {
     }
     stage('Deploy') {
       when {
-        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
+        expression { BRANCH_NAME == 'dev'  }
       }
       steps {
         script {
-          build()
           echo "Building Docker"
+          build()
           echo "Deploying ${BRANCH_NAME}"
           deploy(${BRANCH_NAME})          
         }         
@@ -37,8 +37,9 @@ pipeline {
       }
       steps {
         script {
-          echo "Deploying to STAGING ${BRANCH_NAME}"
-        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
+          echo "Deploying to QA ${BRANCH_NAME}"
+          echo "Deploying ${BRANCH_NAME}"
+          deploy(${BRANCH_NAME})          
         }
       }
     }
@@ -50,7 +51,8 @@ pipeline {
       steps {
        script {
           echo "Deploying to STAGING ${BRANCH_NAME}"
-        // Ajoutez ici les étapes de déploiement spécifiques à votre projet
+          echo "Deploying ${BRANCH_NAME}"
+          deploy(${BRANCH_NAME})          
         }
       }
     }
@@ -63,8 +65,8 @@ pipeline {
         script {
           echo "Deploying to PROD from ${BRANCH_NAME}"
           input message: "Approve deployment to PROD", ok: "Deploy"
+          deploy(${BRANCH_NAME})          
           
-          // Ajoutez ici les étapes de déploiement spécifiques à votre projet
         }
       }
     }
@@ -99,12 +101,12 @@ def deploy(String branch) {
     rm -Rf .kube
     mkdir .kube
     ls
-    cat $KUBECONFIG > .kube/config
-    cp app-movie/values.yaml values.yml
-    cat values.yml
-    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-    cat values.yml
-    helm upgrade --install app-movie app-movie --values=values.yml -- branch
+    cat ${KUBECONFIG} > .kube/config
+    cp app-movie/values.yaml values.yaml
+    cat values.yaml
+    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
+    cat values.yaml
+    helm upgrade --install app-movie app-movie --values=values.yaml -- branch
     '''
 }
 
