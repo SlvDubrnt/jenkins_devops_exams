@@ -26,7 +26,7 @@ pipeline {
           echo "Building Docker"
           build()
           echo "Deploying ${BRANCH_NAME}"
-          deploy(${BRANCH_NAME})          
+          deploy(BRANCH_NAME)          
         }         
       }
     }
@@ -39,7 +39,7 @@ pipeline {
         script {
           echo "Deploying to QA ${BRANCH_NAME}"
           echo "Deploying ${BRANCH_NAME}"
-          deploy(${BRANCH_NAME})          
+          deploy(BRANCH_NAME)          
         }
       }
     }
@@ -52,7 +52,7 @@ pipeline {
        script {
           echo "Deploying to STAGING ${BRANCH_NAME}"
           echo "Deploying ${BRANCH_NAME}"
-          deploy(${BRANCH_NAME})          
+          deploy(BRANCH_NAME)          
         }
       }
     }
@@ -65,7 +65,7 @@ pipeline {
         script {
           echo "Deploying to PROD from ${BRANCH_NAME}"
           input message: "Approve deployment to PROD", ok: "Deploy"
-          deploy(${BRANCH_NAME})          
+          deploy(BRANCH_NAME)          
           
         }
       }
