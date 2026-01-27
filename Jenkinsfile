@@ -5,6 +5,7 @@ pipeline {
     DOCKER_PASS = credentials("DOCKER_HUB_PASS") // we retrieve  docker password from secret text called docker_hub_pass saved on jenkins
     //BRANCH_NAME = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
     BRANCH_NAME = "${GIT_BRANCH}".replace("refs/heads/", "")
+    KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
   }
   agent any
   stages {
@@ -25,9 +26,7 @@ pipeline {
           build()
           echo "Building Docker"
           echo "Deploying ${BRANCH_NAME}"
-          if ( BRANCH_NAME == 'dev' ) {
-            currentBuild.result = 'SUCCESS'
-          }   
+          deploy(${BRANCH_NAME})          
         }         
       }
     }
@@ -96,7 +95,6 @@ def branchSuccess(String branch) {
 }
 
 def deploy(String branch) {
-    KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
     sh '''
     rm -Rf .kube
     mkdir .kube
@@ -106,7 +104,7 @@ def deploy(String branch) {
     cat values.yml
     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
     cat values.yml
-    helm upgrade --install app-movie app-movie --values=values.yml --namespace dev
+    helm upgrade --install app-movie app-movie --values=values.yml -- branch
     '''
 }
 
