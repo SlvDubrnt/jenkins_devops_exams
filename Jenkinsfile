@@ -62,7 +62,7 @@ def verif_app_movie(){
   sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
   
   
-  if ${BRANCH_NAME} == 'dev' {
+  if (${BRANCH_NAME} == 'dev') {
 
       echo '*** Ajout de lignes '
       sh '''
@@ -87,7 +87,7 @@ def verif_app_movie(){
 def deploy() {
 
     sh "kubectl delete all --all -n ${BRANCH_NAME}"
-    if ${BRANCH_NAME} == 'dev' {
+    if (${BRANCH_NAME} == 'dev') {
         sh "kubectl delete pvc --all -n ${BRANCH_NAME}"
     }
 
