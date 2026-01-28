@@ -224,3 +224,4 @@ def build() {
   sh 'docker volume rm postgres_data_movie'
  
   sh 'docker image ls'
+}
