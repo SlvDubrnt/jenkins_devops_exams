@@ -13,13 +13,12 @@ pipeline {
       steps {
         script {
           echo "BRANCH_NAME: ${BRANCH_NAME}"
-          // Ajoutez d'autres débogages si nécessaire
         }
       }
     }
     stage('Deploy') {
       when {
-        expression { BRANCH_NAME == 'dev'  }
+        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
       }
       steps {
         script {
@@ -27,45 +26,21 @@ pipeline {
           build()
           echo "Deploying ${BRANCH_NAME}"
           deploy()          
+          verif_app_movie()
         }         
-      }
-    }
-
-    stage('QA Approval') {
-      when {
-        expression { BRANCH_NAME == 'qa' && checkBranchSuccess('dev') } 
-      }
-      steps {
-        script {
-          echo "Deploying to QA ${BRANCH_NAME}"
-          echo "Deploying ${BRANCH_NAME}"
-          deploy()          
-        }
-      }
-    }
-
-    stage('Staging Approval') {
-      when {
-        expression { BRANCH_NAME == 'staging' && checkBranchSuccess('qa') }
-      }
-      steps {
-       script {
-          echo "Deploying to STAGING ${BRANCH_NAME}"
-          echo "Deploying ${BRANCH_NAME}"
-          deploy()          
-        }
       }
     }
 
     stage('Manual Approval for Master') {
       when {
-        expression { BRANCH_NAME == 'master'   && checkBranchSuccess('staging')}
+        expression { BRANCH_NAME == 'master'  }
       }
       steps {
         script {
           echo "Deploying to PROD from ${BRANCH_NAME}"
           input message: "Approve deployment to PROD", ok: "Deploy"
           deploy()          
+          verif_app_movie()
           
         }
       }
@@ -80,24 +55,42 @@ pipeline {
   } 
 }
 
-// Fonction pour vérifier si une branche spécifique a réussi
-def checkBranchSuccess(String branch) {
-  def lastBuild = currentBuild.raw.builds.find { it.getEnvironment("BRANCH_NAME") == previousBranch }
-    if (lastBuild && lastBuild.result == 'SUCCESS') {
-      return true
-    } else {
-      return false
-    }
-}
-def branchSuccess(String branch) {
-    // Implémentez votre logique de vérification ici
-  currentBuild.rawBuild.getPreviousBuilds().find { previousBuild ->
-    previousBuild.displayName == branch && previousBuild.result == 'SUCCESS'
-  } != null
+def verif_app_movie(){
+
+  echo '*** Verification acces application'
+  sh 'curl -I http://localhost:9090/api/v1/movies/docs'
+  sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
+  
+  
+  if ${BRANCH_NAME} == 'dev' {
+
+      echo '*** Ajout de lignes '
+      sh '''
+         curl -X 'POST' 'http://localhost:9090/api/v1/casts/' -H 'accept: application/json' -H 'Content-Type: application/json' \
+         -d '{ "name": "1", "nationality": "1" }'
+
+         curl -X 'POST' 'http://localhost:9090/api/v1/movies/' -H 'accept: application/json' -H 'Content-Type: application/json' \
+         -d '{  "name": "1",  "plot": "1",  "genres": [  "1"  ], "casts_id": [ 1 ] }'
+
+      '''
+  }
+
+  echo '*** affichage des lignes de movie''
+  sh '''
+     curl -X 'GET' 'http://localhost:9090/api/v1/movies/' -H 'accept: application/json'
+  '''
+  
 }
 
+
+
 def deploy() {
-    
+
+    sh "kubectl delete all --all -n ${BRANCH_NAME}"
+    if ${BRANCH_NAME} == 'dev' {
+        sh "kubectl delete pvc --all -n ${BRANCH_NAME}"
+    }
+
     sh '''
     rm -Rf .kube
     mkdir .kube
@@ -128,6 +121,10 @@ def build() {
     -e POSTGRES_DB=movie_db_dev postgres:12.1-alpine
   '''
 
+  sh 'docker volume create postgres_data_cast'
+  sh '''
+  docker run -d --name cast_db \
+    --restart unless-stopped \
   sh 'docker volume create postgres_data_cast'
   sh '''
   docker run -d --name cast_db \
@@ -227,7 +224,3 @@ def build() {
   sh 'docker volume rm postgres_data_movie'
  
   sh 'docker image ls'
-  sh 'docker network ls'
-  sh 'docker container ls'
-  sh 'docker volume ls'
-}
