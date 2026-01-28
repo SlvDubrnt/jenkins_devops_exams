@@ -104,9 +104,9 @@ def deploy(String branch) {
     ls
     cat ${KUBECONFIG} > .kube/config
     cp app-movie/values.yaml values.yaml
-    cat values.yaml
+    cat values.yaml | grep tag
     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
-    cat values.yaml
+    cat values.yaml | grep tag
     helm upgrade --install app-movie app-movie --values=values.yaml -n branch
     '''
 }
