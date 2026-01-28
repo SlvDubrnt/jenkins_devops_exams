@@ -125,10 +125,6 @@ def build() {
   sh '''
   docker run -d --name cast_db \
     --restart unless-stopped \
-  sh 'docker volume create postgres_data_cast'
-  sh '''
-  docker run -d --name cast_db \
-    --restart unless-stopped \
     -v postgres_data_cast:/var/lib/postgresql/data/ \
     --network jenkins_cast_movie_network \
     -e POSTGRES_USER=cast_db_username \
