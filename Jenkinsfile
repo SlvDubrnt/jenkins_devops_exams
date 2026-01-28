@@ -26,7 +26,7 @@ pipeline {
           echo "Building Docker"
           build()
           echo "Deploying ${BRANCH_NAME}"
-          deploy(BRANCH_NAME)          
+          deploy()          
         }         
       }
     }
@@ -39,7 +39,7 @@ pipeline {
         script {
           echo "Deploying to QA ${BRANCH_NAME}"
           echo "Deploying ${BRANCH_NAME}"
-          deploy(BRANCH_NAME)          
+          deploy()          
         }
       }
     }
@@ -52,7 +52,7 @@ pipeline {
        script {
           echo "Deploying to STAGING ${BRANCH_NAME}"
           echo "Deploying ${BRANCH_NAME}"
-          deploy(BRANCH_NAME)          
+          deploy()          
         }
       }
     }
@@ -65,7 +65,7 @@ pipeline {
         script {
           echo "Deploying to PROD from ${BRANCH_NAME}"
           input message: "Approve deployment to PROD", ok: "Deploy"
-          deploy(BRANCH_NAME)          
+          deploy()          
           
         }
       }
@@ -96,7 +96,7 @@ def branchSuccess(String branch) {
   } != null
 }
 
-def deploy(String branch) {
+def deploy() {
     
     sh '''
     rm -Rf .kube
@@ -107,7 +107,7 @@ def deploy(String branch) {
     cat values.yaml | grep tag
     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
     cat values.yaml | grep tag
-    helm upgrade --install app-movie app-movie --values=values.yaml -n branch
+    helm upgrade --install app-movie ./app-movie --values=values.yaml -n ${BRANCH_NAME}
     '''
 }
 
