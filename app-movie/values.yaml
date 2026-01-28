@@ -50,18 +50,15 @@ movie_service:
     - name: cast-service
       host: cast-service
       port: 8001
-      timeout: 60
   env:
     DATABASE_URI: postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev
-    CAST_SERVICE_HOST_URL: http://cast_service:8000/api/v1/casts/
+    CAST_SERVICE_HOST_URL: http://cast-service:8001/api/v1/casts/
 
 
 nginx:
   replicas: 1
-  image:
-    repository: nginx
-    tag: latest
   configVolumePath: ./nginx_config.conf
+  image: "nginx:latest"
   port: 9090
   configMapName: nginx-configmap
   initContainers:
@@ -70,11 +67,9 @@ nginx:
     - name: movie-service
       host: movie-service
       port: 8002
-      timeout: 60
     - name: cast-service
       host: cast-service
       port: 8001
-      timeout: 60
 
 httpRoute:
 # HTTPRoute enabled.

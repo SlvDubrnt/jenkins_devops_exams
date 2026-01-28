@@ -36,9 +36,9 @@ spec:
       {{- end }}
       containers:
       - name: nginx
-        image: {{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}
+        image: {{ .Values.nginx.image }}
         ports:
-        - containerPort: 9090
+          - containerPort: 9090
         volumeMounts:
         - name: nginx-config-volume
           mountPath: /etc/nginx/conf.d/
@@ -46,6 +46,7 @@ spec:
       - name: nginx-config-volume
         configMap:
           name: {{ .Values.nginx.configMapName }}
+
 
 ---
 apiVersion: v1

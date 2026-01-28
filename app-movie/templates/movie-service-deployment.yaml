@@ -34,11 +34,13 @@ spec:
         image: {{ .Values.movie_service.image }}:{{ .Values.movie_service.tag }}
         imagePullPolicy: Always
         command: ["sh", "-c", "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"]
-        ports:
-        - containerPort: {{ .Values.movie_service.port }}
         env:
         - name: DATABASE_URI
           value: {{ .Values.movie_service.env.DATABASE_URI | default "postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev" }}
+        - name: CAST_SERVICE_HOST_URL
+          value: {{ .Values.movie_service.env.CAST_SERVICE_HOST_URL }}
+        ports:
+        - containerPort: {{ .Values.movie_service.port }}
         resources:
           requests:
             cpu: "100m"
