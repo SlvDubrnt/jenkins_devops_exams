@@ -75,7 +75,7 @@ def verif_app_movie(){
       '''
   }
 
-  echo '*** affichage des lignes de movie''
+  echo '*** affichage des lignes de movie'
   sh '''
      curl -X 'GET' 'http://localhost:9090/api/v1/movies/' -H 'accept: application/json'
   '''
