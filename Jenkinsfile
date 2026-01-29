@@ -124,7 +124,10 @@ def deploy() {
     cat values.yaml | grep tag
     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
     cat values.yaml | grep tag
+    
+    sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
     helm upgrade --install app-movie ./app-movie --values=values.yaml -n ${BRANCH_NAME}
+    sh "docker logout" // Logout from Docker Hub
     '''
 }
 
