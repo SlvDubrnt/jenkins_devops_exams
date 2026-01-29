@@ -61,6 +61,8 @@ pipeline {
       }
       steps {
         script {
+          echo "Building Docker"
+          build()
           echo "Deploying to PROD from ${BRANCH_NAME}"
           input message: "Approve deployment to PROD", ok: "Deploy"
           deploy()          
