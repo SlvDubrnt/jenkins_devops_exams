@@ -73,7 +73,7 @@ pipeline {
   post {
     always {
       script {
-        sh "docker logout" // Logout from Docker Hub
+        //sh "docker logout" // Logout from Docker Hub
       } 
     }
   } 
@@ -216,14 +216,16 @@ def build() {
   sh 'docker container stop nginx'  
   
   echo 'Push all images'
-  sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
 
   def images = ["cast_service", "movie_service"]
+  sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
   
   images.each { image ->
     echo "${DOCKER_ID}/${image}:${DOCKER_TAG}"
     sh "docker push ${DOCKER_ID}/${image}:${DOCKER_TAG}"
   }
+  
+  sh "docker logout" // Logout from Docker Hub
   
   echo "*** Remove containers and images"
   sh 'docker container rm cast_service'  
@@ -234,7 +236,7 @@ def build() {
   
   images.each { image ->
     echo "${DOCKER_ID}/${image}:${DOCKER_TAG}"
-    sh "docker push ${DOCKER_ID}/${image}:${DOCKER_TAG}"
+    sh "docker image rm  ${DOCKER_ID}/${image}:${DOCKER_TAG}"
   }
   sh 'docker image rm postgres:12.1-alpine -f'
   sh 'docker image rm nginx -f'
