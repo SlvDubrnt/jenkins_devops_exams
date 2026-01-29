@@ -61,10 +61,10 @@ pipeline {
       }
       steps {
         script {
+          input message: "Approve deployment to PROD", ok: "Deploy"
           echo "Building Docker"
           build()
           echo "Deploying to PROD from ${BRANCH_NAME}"
-          input message: "Approve deployment to PROD", ok: "Deploy"
           deploy()          
           echo "Controling PROD from ${BRANCH_NAME}"
           verif_access_app()
