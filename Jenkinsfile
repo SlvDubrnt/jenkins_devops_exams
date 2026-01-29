@@ -70,13 +70,6 @@ pipeline {
       }
     }
   }
-  post {
-    always {
-      script {
-        //sh "docker logout" // Logout from Docker Hub
-      } 
-    }
-  } 
 }
 
 def verif_access_app(){
@@ -250,3 +243,4 @@ def build() {
  
   sh 'docker image ls'
 }
+
