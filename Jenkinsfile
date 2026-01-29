@@ -75,6 +75,7 @@ pipeline {
 def verif_access_app(){
 
   echo '*** Verification acces application'
+  sh 'sleep 20'
   sh 'curl -I http://localhost:9090/api/v1/movies/docs'
   sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
 }
