@@ -30,10 +30,10 @@ pipeline {
           echo "Controling access from ${BRANCH_NAME}"
           verif_access_app()
           echo "Add data from ${BRANCH_NAME}"
-          add_data(){  
+          add_data()
           echo "Controling  ${BRANCH_NAME}"
-          display_movie()   
-        }         
+          display_movie()            
+        } 
       }
     }
     
