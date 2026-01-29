@@ -121,8 +121,13 @@ def deploy() {
     cat values.yaml | grep tag
     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
     cat values.yaml | grep tag
-    
-    helm upgrade --install app-movie ./app-movie --values=values.yaml -n ${BRANCH_NAME}
+    '''
+    sh '''
+    if (${BRANCH_NAME} == "master") {
+      helm upgrade --install app-movie ./app-movie --values=values.yaml -n prod 
+    } else {
+      helm upgrade --install app-movie ./app-movie --values=values.yaml -n ${BRANCH_NAME}
+    }
     '''
 }
 
