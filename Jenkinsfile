@@ -16,20 +16,44 @@ pipeline {
         }
       }
     }
-    stage('Deploy') {
+    stage('Deploy_dev') {
       when {
-        expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
+        expression { BRANCH_NAME == 'dev'  }
       }
       steps {
         script {
           echo "Building Docker"
           build()
           echo "Deploying ${BRANCH_NAME}"
+          delete_all_dev()
           deploy()          
-          verif_app_movie()
+          echo "Controling access from ${BRANCH_NAME}"
+          verif_access_app()
+          echo "Add data from ${BRANCH_NAME}"
+          add_data(){  
+          echo "Controling  ${BRANCH_NAME}"
+          display_movie()   
         }         
       }
     }
+    
+    stage('Deploy') {
+      when {
+        expression { BRANCH_NAME == 'qa' || BRANCH_NAME == 'staging' }
+      }
+      steps {
+        script {
+          echo "Building Docker"
+          build()
+          echo "Deploying ${BRANCH_NAME}"
+          deploy() 
+          echo "Controling  ${BRANCH_NAME}"
+          verif_access_app()         
+          display_movie() 
+        }         
+      }
+    }
+
 
     stage('Manual Approval for Master') {
       when {
@@ -40,8 +64,8 @@ pipeline {
           echo "Deploying to PROD from ${BRANCH_NAME}"
           input message: "Approve deployment to PROD", ok: "Deploy"
           deploy()          
-          verif_app_movie()
-          
+          echo "Controling PROD from ${BRANCH_NAME}"
+          verif_access_app()
         }
       }
     }
@@ -55,25 +79,27 @@ pipeline {
   } 
 }
 
-def verif_app_movie(){
+def verif_access_app(){
 
   echo '*** Verification acces application'
   sh 'curl -I http://localhost:9090/api/v1/movies/docs'
   sh 'curl -I http://localhost:9090/api/v1/casts/docs' 
+}
+
+def add_data(){  
   
-  
-  if (${BRANCH_NAME} == 'dev') {
+  echo '*** Ajout de lignes '
+  sh '''
+     curl -X 'POST' 'http://localhost:9090/api/v1/casts/' -H 'accept: application/json' -H 'Content-Type: application/json' \
+     -d '{ "name": "1", "nationality": "1" }'
 
-      echo '*** Ajout de lignes '
-      sh '''
-         curl -X 'POST' 'http://localhost:9090/api/v1/casts/' -H 'accept: application/json' -H 'Content-Type: application/json' \
-         -d '{ "name": "1", "nationality": "1" }'
+     curl -X 'POST' 'http://localhost:9090/api/v1/movies/' -H 'accept: application/json' -H 'Content-Type: application/json' \
+     -d '{  "name": "1",  "plot": "1",  "genres": [  "1"  ], "casts_id": [ 1 ] }'
 
-         curl -X 'POST' 'http://localhost:9090/api/v1/movies/' -H 'accept: application/json' -H 'Content-Type: application/json' \
-         -d '{  "name": "1",  "plot": "1",  "genres": [  "1"  ], "casts_id": [ 1 ] }'
+  '''
+}
 
-      '''
-  }
+def display_movie(){
 
   echo '*** affichage des lignes de movie'
   sh '''
@@ -83,14 +109,12 @@ def verif_app_movie(){
 }
 
 
+def delete_all_dev(){
+    sh "kubectl delete all --all -n ${BRANCH_NAME}"
+    sh "kubectl delete pvc --all -n ${BRANCH_NAME}"
+}
 
 def deploy() {
-
-    sh "kubectl delete all --all -n ${BRANCH_NAME}"
-    if (${BRANCH_NAME} == 'dev') {
-        sh "kubectl delete pvc --all -n ${BRANCH_NAME}"
-    }
-
     sh '''
     rm -Rf .kube
     mkdir .kube
