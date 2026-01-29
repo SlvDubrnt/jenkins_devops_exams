@@ -123,11 +123,11 @@ def deploy() {
     cat values.yaml | grep tag
     '''
     sh '''
-    if (${BRANCH_NAME} == "master") {
-      helm upgrade --install app-movie ./app-movie --values=values.yaml -n prod 
-    } else {
+    if [ "$BRANCH_NAME" == "master" ]; then
+      helm upgrade --install app-movie ./app-movie --values=values.yaml -n prod
+    else
       helm upgrade --install app-movie ./app-movie --values=values.yaml -n ${BRANCH_NAME}
-    }
+    fi
     '''
 }
 
