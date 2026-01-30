@@ -143,8 +143,6 @@ def helm(){
 }
 
 def build() {
-  echo '*** Creation du reseau'
-  sh 'docker network create jenkins_cast_movie_network'
   
   echo '*** Creation des bases'
   sh 'docker volume create postgres_data_movie'
@@ -253,7 +251,6 @@ def build() {
   }
   sh 'docker image rm postgres:12.1-alpine -f'
   sh 'docker image rm nginx -f'
-  sh 'docker network rm jenkins_cast_movie_network'
  
   sh 'docker volume rm postgres_data_cast'
   sh 'docker volume rm postgres_data_movie'
