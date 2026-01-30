@@ -27,6 +27,8 @@ pipeline {
           echo "Deploying ${BRANCH_NAME}"
           delete_all_dev()
           deploy()          
+          echo " Helm from ${BRANCH_NAME}"
+          helm()
           echo "Controling access from ${BRANCH_NAME}"
           verif_access_app()
           echo "Add data from ${BRANCH_NAME}"
@@ -47,6 +49,8 @@ pipeline {
           build()
           echo "Deploying ${BRANCH_NAME}"
           deploy() 
+          echo " Helm from ${BRANCH_NAME}"
+          helm()
           echo "Controling  ${BRANCH_NAME}"
           verif_access_app()         
           display_movie() 
@@ -67,6 +71,8 @@ pipeline {
           echo "Deploying to PROD from ${BRANCH_NAME}"
           BRANCH_NAME = "prod"
           deploy()          
+          echo " Helm to PROD from ${BRANCH_NAME}"
+          helm_prod()
           echo "Controling PROD from ${BRANCH_NAME}"
           verif_access_app()
         }
@@ -122,15 +128,19 @@ def deploy() {
     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yaml
     cat values.yaml | grep tag
     '''
+}
+
+def helm_prod(){ 
     sh '''
-    if [ "$BRANCH_NAME" == "master" ]; then
       helm upgrade --install app-movie ./app-movie --values=values.yaml -n prod
-    else
-      helm upgrade --install app-movie ./app-movie --values=values.yaml -n ${BRANCH_NAME}
-    fi
     '''
 }
 
+def helm(){ 
+    sh '''
+      helm upgrade --install app-movie ./app-movie --values=values.yaml -n ${BRANCH_NAME}
+    '''
+}
 
 def build() {
   echo '*** Creation du reseau'
